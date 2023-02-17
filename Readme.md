@@ -1,7 +1,7 @@
 # Личный проект «Кекстаграм»
 
 * Студент: [Sergey Melkozerov](https://up.htmlacademy.ru/javascript/28/user/2131829).
-* Наставник: `Неизвестно`.
+* Наставник: [Андрей Устименко](https://htmlacademy.ru/profile/id81071).
 
 ---
 
