@@ -11,16 +11,16 @@ const MESSAGES = [
 
 const NAMES = ['Эммануил', 'Розовые_щечки_252', 'валентина сергеевна', 'Андрей', 'Кошка', 'Администрация'];
 
-const createIdGenerator = () => {
-  let value = 0;
+// const createIdGenerator = () => {
+//   let value = 0;
 
-  return function () {
-    value++;
-    return value;
-  };
-};
+//   return function () {
+//     value++;
+//     return value;
+//   };
+// };
 
-const createPhotoId = createIdGenerator();
+// const createPhotoId = createIdGenerator();
 
 const getRandomInteger = (min, max) => {
   const lower = Math.ceil(Math.min(Math.abs(min), Math.abs(max)));
@@ -50,33 +50,33 @@ const createRandomIdFromRangeGenerator = (min, max) => {
 };
 
 const createCommentId = createRandomIdFromRangeGenerator(1, 9007199254740992);
-const createAvatar = () => `img/avatar-${getRandomInteger(1, AVATARS_COUNT)}.svg`;
-const createMessage = () => MESSAGES[getRandomInteger(0, MESSAGES.length - 1)];
-const createName = () => NAMES[getRandomInteger(0, NAMES.length - 1)];
+// const createAvatar = () => `img/avatar-${getRandomInteger(1, AVATARS_COUNT)}.svg`;
+// const createMessage = () => MESSAGES[getRandomInteger(0, MESSAGES.length - 1)];
+// const createName = () => NAMES[getRandomInteger(0, NAMES.length - 1)];
 
 const createComment = () => {
   const comment = {
     id: createCommentId(),
-    avatar: createAvatar(),
-    message: createMessage(),
-    authorName: createName()
+    avatar: `img/avatar-${getRandomInteger(1, AVATARS_COUNT)}.svg`,
+    message: MESSAGES[getRandomInteger(0, MESSAGES.length - 1)],
+    authorName: NAMES[getRandomInteger(0, NAMES.length - 1)]
   };
 
   return comment;
 };
 
-const createDescription = () => {
-  const description = {
-    id: createPhotoId(),
-    url: `photos/${this.id}.jpg`,
-    description: `Фотография №${this.id}`,
-    likes: getRandomInteger(15, 200),
-    comments: createComment()
-  };
+const createDescription = (id) => {
+  const photoId = id;
 
-  return description;
+  return {
+    id: photoId,
+    url: `photos/${photoId}.jpg`,
+    description: `Фотография №${photoId}`,
+    likes: getRandomInteger(15, 200),
+    comments: Array.from({length: getRandomInteger(1,2)}, createComment)
+  };
 };
 
-const createDescriptionArray = (count) => Array.from({length: count}, createDescription);
+const createDescriptions = (count) => Array.from({length: count}, (element, index) => createDescription(index + 1));
 
-createDescriptionArray(25);
+createDescriptions(25);
