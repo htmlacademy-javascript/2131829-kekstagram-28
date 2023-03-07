@@ -11,17 +11,6 @@ const MESSAGES = [
 
 const NAMES = ['Эммануил', 'Розовые_щечки_252', 'валентина сергеевна', 'Андрей', 'Кошка', 'Администрация'];
 
-// const createIdGenerator = () => {
-//   let value = 0;
-
-//   return function () {
-//     value++;
-//     return value;
-//   };
-// };
-
-// const createPhotoId = createIdGenerator();
-
 const getRandomInteger = (min, max) => {
   const lower = Math.ceil(Math.min(Math.abs(min), Math.abs(max)));
   const upper = Math.floor(Math.max(Math.abs(min), Math.abs(max)));
@@ -30,53 +19,21 @@ const getRandomInteger = (min, max) => {
   return Math.floor(result);
 };
 
-const createRandomIdFromRangeGenerator = (min, max) => {
-  const previousValues = [];
+const createComment = (id) => ({
+  id: id,
+  avatar: `img/avatar-${getRandomInteger(1, AVATARS_COUNT)}.svg`,
+  message: MESSAGES[getRandomInteger(0, MESSAGES.length - 1)],
+  authorName: NAMES[getRandomInteger(0, NAMES.length - 1)]
+});
 
-  return function () {
-    let currentValue = getRandomInteger(min, max);
+const createDescription = (id) => ({
+  id: id,
+  url: `photos/${id}.jpg`,
+  description: `Фотография №${id}`,
+  likes: getRandomInteger(15, 200),
+  comments: Array.from({length: getRandomInteger(1,5)}, (_, index) => createComment(index + 1))
+});
 
-    if (previousValues.length >= (max - min + 1)) {
-      return null;
-    }
-
-    while (previousValues.includes(currentValue)) {
-      currentValue = getRandomInteger(min, max);
-    }
-
-    previousValues.push(currentValue);
-    return currentValue;
-  };
-};
-
-const createCommentId = createRandomIdFromRangeGenerator(1, 9007199254740992);
-// const createAvatar = () => `img/avatar-${getRandomInteger(1, AVATARS_COUNT)}.svg`;
-// const createMessage = () => MESSAGES[getRandomInteger(0, MESSAGES.length - 1)];
-// const createName = () => NAMES[getRandomInteger(0, NAMES.length - 1)];
-
-const createComment = () => {
-  const comment = {
-    id: createCommentId(),
-    avatar: `img/avatar-${getRandomInteger(1, AVATARS_COUNT)}.svg`,
-    message: MESSAGES[getRandomInteger(0, MESSAGES.length - 1)],
-    authorName: NAMES[getRandomInteger(0, NAMES.length - 1)]
-  };
-
-  return comment;
-};
-
-const createDescription = (id) => {
-  const photoId = id;
-
-  return {
-    id: photoId,
-    url: `photos/${photoId}.jpg`,
-    description: `Фотография №${photoId}`,
-    likes: getRandomInteger(15, 200),
-    comments: Array.from({length: getRandomInteger(1,2)}, createComment)
-  };
-};
-
-const createDescriptions = (count) => Array.from({length: count}, (element, index) => createDescription(index + 1));
+const createDescriptions = (count) => Array.from({length: count}, (_, index) => createDescription(index + 1));
 
 createDescriptions(25);
