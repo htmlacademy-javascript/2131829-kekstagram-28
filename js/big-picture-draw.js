@@ -67,6 +67,7 @@ const showBigPicture = (targetedPicture, shownPicture) => {
   shownPicture.querySelector('.big-picture__img').src = targetedPicture.querySelector('.picture').href;
   shownPicture.querySelector('.likes-count').textContent = targetedPicture.querySelector('.picture__likes').textContent;
   shownPicture.querySelector('.comments-count').textContent = targetedPicture.querySelector('.picture__comments').textContent;
+  /*какая-то работа с комментариями*/
 
 }
 
