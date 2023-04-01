@@ -1,5 +1,5 @@
 import {createDescriptions} from './photo-description-data.js';
-import {renderPhotos} from './render-photos.js';
+import {renderPhotos} from './gallery.js';
 
 const descriptions = createDescriptions(25);
 

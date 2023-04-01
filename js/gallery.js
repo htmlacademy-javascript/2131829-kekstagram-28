@@ -10,6 +10,7 @@ const createPhoto = (photoData) => {
   return miniature;
 };
 
+const pictures = document.querySelector('.pictures');
 
 export const renderPhotos = (photosData) => {
   const photoContainer = document.createDocumentFragment();
@@ -18,7 +19,6 @@ export const renderPhotos = (photosData) => {
     photoContainer.append(createPhoto(data));
   });
 
-  const pictures = document.querySelector('.pictures');
   pictures.append(photoContainer);
 };
 
