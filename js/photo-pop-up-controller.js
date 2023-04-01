@@ -1,13 +1,13 @@
 export const showPhoto = (url, likes , comments, description) => {
   const shownPhoto = document.querySelector('.big-picture');
 
-  shownPhoto.classList.remove('.hidden');
+  shownPhoto.classList.remove('hidden');
 
   shownPhoto.querySelector('.big-picture__img').src = url;
   shownPhoto.querySelector('.likes-count').textContent = likes;
   shownPhoto.querySelector('.comments-count').textContent = comments.length;
 
-  shownPhoto.querySelector('.social__comments').append(() => {
+  const loadComments = () => {
     const commentsContainer = document.createDocumentFragment();
 
     comments.forEach((comment) => {
@@ -30,7 +30,9 @@ export const showPhoto = (url, likes , comments, description) => {
     });
 
     return commentsContainer;
-  });
+  };
+
+  shownPhoto.querySelector('.social__comments').append(loadComments());
 
   shownPhoto.querySelector('.social__caption').textContent = description;
 
