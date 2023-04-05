@@ -67,8 +67,6 @@ const renderComents = (data) => {
 };
 
 export const showPhoto = (data) => {
-  // const shownPhoto = document.querySelector('.big-picture');
-
   bigPicture.classList.remove('hidden');
 
   bigPictureImage.src = data.url;
@@ -77,13 +75,12 @@ export const showPhoto = (data) => {
 
   renderComents(data);
 
-  document.querySelector('body').classList.add('modal-open');
+  document.body.classList.add('modal-open');
 };
 
 export const closeShownPhoto = () => {
-  document.querySelector('body').classList.remove('modal-open');
+  document.body.classList.remove('modal-open');
 
-  // const photo = document.querySelector('.big-picture');
   bigPicture.classList.add('hidden');
 
   bigPictureImage.src = '';
