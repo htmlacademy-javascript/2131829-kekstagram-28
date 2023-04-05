@@ -9,7 +9,7 @@ renderPhotos(descriptions);
 showPhoto(createDescriptions(1)[0]);
 
 document.addEventListener('keydown', (evt) => {
-  if (evt.keyCode === 27) {
+  if (evt.code === 'Escape') {
     closeShownPhoto();
   }
 });
