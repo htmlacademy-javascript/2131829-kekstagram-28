@@ -38,7 +38,7 @@ const createDescription = (id) => ({
   url: `photos/${id}.jpg`,
   description: `Фотография №${id}`,
   likes: getRandomInteger(15, 200),
-  comments: Array.from({length: getRandomInteger(4,MESSAGES.length)}, (_, index) => createComment(index + 1))
+  comments: Array.from({length: getRandomInteger(4, MESSAGES.length)}, (_, index) => createComment(index + 1))
 });
 
 export const createDescriptions = (count) => Array.from({length: count}, (_, index) => createDescription(index + 1));

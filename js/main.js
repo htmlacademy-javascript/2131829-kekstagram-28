@@ -1,14 +1,15 @@
-import {createDescriptions} from './photo-description-data.js';
+import {createDescriptions} from './photo-data.js';
 import {renderPhotos} from './gallery.js';
-import {showPhoto} from './photo-pop-up-controller.js';
-import {closeShownPhoto} from './photo-pop-up-controller.js';
+import {showPhoto, closeShownPhoto} from './big-picture.js';
 
 const descriptions = createDescriptions(25);
 
 renderPhotos(descriptions);
 
-const testDesc = createDescriptions(1);
+showPhoto(createDescriptions(1)[0]);
 
-showPhoto(testDesc[0].url, testDesc[0].likes , testDesc[0].comments, testDesc[0].description);
-
-document.querySelector('.big-picture__cancel').addEventListener('click', closeShownPhoto);
+document.addEventListener('keydown', (evt) => {
+  if (evt.keyCode === 27) {
+    closeShownPhoto();
+  }
+});
