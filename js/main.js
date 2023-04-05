@@ -12,4 +12,4 @@ imageLoader.addEventListener('change', loadForm);
 
 const closeImageLoaderButton = document.querySelector('#upload-cancel');
 
-closeImageLoaderButton.addEventListener('click', closeLoaderForm);
+closeImageLoaderButton.addEventListener('click', closeLoaderForm); //on Esc needed
