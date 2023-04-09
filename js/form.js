@@ -9,12 +9,9 @@ const ERROR_MESSAGES = {
 const MAX_SCALE = 100;
 const MIN_SCALE = 25;
 const DEFAULT_SCALE = 100;
-
-let message = '';
 const imageLoader = document.querySelector('#upload-file');
 const imgUploadOverlay = document.querySelector('.img-upload__overlay');
 const imageLoaderForm = document.querySelector('.img-upload__form');
-const imageLoaderFormSubmitButton = imageLoaderForm.querySelector('.img-upload__submit');
 const hashtagsField = imageLoaderForm.querySelector('.text__hashtags');
 const commentField = imageLoaderForm.querySelector('.text__description');
 const closeImageLoaderButton = document.querySelector('#upload-cancel');
@@ -23,17 +20,24 @@ const scaleBigger = imageLoaderForm.querySelector('.scale__control--bigger');
 const scaleValue = imageLoaderForm.querySelector('.scale__control--value');
 const imagePreview = imageLoaderForm.querySelector('.img-upload__preview');
 const image = imagePreview.querySelector('img');
-let scaleNumber = DEFAULT_SCALE;
 const effects = imageLoaderForm.querySelector('.effects__list');
 const sliderElement = imageLoaderForm.querySelector('.effect-level__slider');
 const effectLevel = imageLoaderForm.querySelector('.effect-level__value');
+const sliderContainer = imageLoaderForm.querySelector('.img-upload__effect-level');
 
-export const loadForm = () => {
+let currentEffect = 'none';
+let scaleNumber = DEFAULT_SCALE;
+let message = '';
+
+export const renderLoaderForm = () => {
   imgUploadOverlay.classList.remove('hidden');
   document.body.classList.add('modal-open');
   scaleValue.value = `${DEFAULT_SCALE}%`;
   scaleNumber = DEFAULT_SCALE;
   image.style = '';
+  sliderContainer.classList.add('hidden');
+  hashtagsField.value = '';
+  commentField.value = '';
 };
 
 export const closeLoaderForm = () => {
@@ -43,13 +47,13 @@ export const closeLoaderForm = () => {
   imageLoader.file = '';
 };
 
-imageLoader.addEventListener('change', loadForm);
-closeImageLoaderButton.addEventListener('click', closeLoaderForm); //on Esc needed
+imageLoader.addEventListener('change', renderLoaderForm);
+closeImageLoaderButton.addEventListener('click', closeLoaderForm);
 
 const pristine = new Pristine(imageLoaderForm, {
   classTo: 'img-upload__field-wrapper',
   errorTextParent: 'img-upload__field-wrapper',
-  errorTextClass: 'error',
+  errorTextClass: 'validate-error',
 }, false);
 
 imageLoaderForm.addEventListener('submit', (evt) => {
@@ -162,29 +166,23 @@ const scaleImageDown = () => {
 scaleBigger.addEventListener('click', scaleImageUp);
 scaleSmaller.addEventListener('click', scaleImageDown);
 
-const applyEffect = (effect) => {
-  let effectToApply;
-
+const detectEffect = (effect) => {
   switch (effect) {
-    case 'effect-none': effectToApply = 'effects__preview--none'; break;
-    case 'effect-chrome': effectToApply = 'effects__preview--chrome'; break;
-    case 'effect-sepia': effectToApply = 'effects__preview--sepia'; break;
-    case 'effect-marvin': effectToApply = 'effects__preview--marvin'; break;
-    case 'effect-phobos': effectToApply = 'effects__preview--phobos'; break;
-    case 'effect-heat': effectToApply = 'effects__preview--heat'; break;
+    case 'effect-none': currentEffect = 'none'; break;
+    case 'effect-chrome': currentEffect = 'chrome'; break;
+    case 'effect-sepia': currentEffect = 'sepia'; break;
+    case 'effect-marvin': currentEffect = 'marvin'; break;
+    case 'effect-phobos': currentEffect = 'phobos'; break;
+    case 'effect-heat': currentEffect = 'heat'; break;
   }
 
+  return currentEffect;
+};
+
+const applyEffect = (effect) => {
   image.className = '';
-  image.classList.add(effectToApply);
+  image.classList.add(`effects__preview--${detectEffect(effect)}`);
 };
-
-const changeImage = (value) => {
-  applyEffect(value.target.id);
-};
-
-effects.addEventListener('change', (evt) => {
-  changeImage(evt);
-});
 
 noUiSlider.create(sliderElement, {
   range: {
@@ -196,30 +194,80 @@ noUiSlider.create(sliderElement, {
   connect: 'lower',
 });
 
-sliderElement.noUiSlider.on('update', () => {
-  effectLevel.value = sliderElement.noUiSlider.get();
-  console.log(effectLevel.value);
+const configureSlider = () => {
+  if (currentEffect !== 'none') {
+    sliderContainer.classList.remove('hidden');
+  }
+
+  switch (currentEffect) {
+    case 'none':
+      sliderContainer.classList.add('hidden');
+      break;
+    case 'chrome': sliderElement.noUiSlider.updateOptions({
+      range: {
+        min: 0,
+        max: 1,
+      },
+      start: 1,
+      step: 0.1,
+    }); break;
+    case 'sepia': sliderElement.noUiSlider.updateOptions({
+      range: {
+        min: 0,
+        max: 1,
+      },
+      start: 1,
+      step: 0.1,
+    }); break;
+    case 'marvin': sliderElement.noUiSlider.updateOptions({
+      range: {
+        min: 0,
+        max: 100,
+      },
+      start: 100,
+      step: 1,
+    }); break;
+    case 'phobos': sliderElement.noUiSlider.updateOptions({
+      range: {
+        min: 0,
+        max: 3,
+      },
+      start: 3,
+      step: 0.1,
+    }); break;
+    case 'heat': sliderElement.noUiSlider.updateOptions({
+      range: {
+        min: 1,
+        max: 3,
+      },
+      start: 3,
+      step: 0.1,
+    }); break;
+  }
+};
+
+effects.addEventListener('change', (evt) => {
+  //image.style = '';
+  applyEffect(evt.target.id);
+  configureSlider();
 });
 
-// 2.2. Наложение эффекта на изображение:
+const calculateFilter = (value) => {
+  let filter;
 
-// По умолчанию должен быть выбран эффект «Оригинал».
-// На изображение может накладываться только один эффект.
-// При смене эффекта, выбором одного из значений среди радиокнопок .effects__radio,
-// добавить картинке внутри .img-upload__preview CSS-класс, соответствующий эффекту.
-// Например, если выбран эффект .effect-chrome,
-// изображению нужно добавить класс effects__preview--chrome.
-// Интенсивность эффекта регулируется перемещением ползунка в слайдере.
-// Слайдер реализуется сторонней библиотекой для реализации слайдеров noUiSlider.
-// Уровень эффекта записывается в поле .effect-level__value.
-// При изменении уровня интенсивности эффекта (предоставляется API слайдера),
-// CSS-стили картинки внутри .img-upload__preview обновляются следующим образом:
-// Для эффекта «Хром» — filter: grayscale(0..1) с шагом 0.1;
-// Для эффекта «Сепия» — filter: sepia(0..1) с шагом 0.1;
-// Для эффекта «Марвин» — filter: invert(0..100%) с шагом 1%;
-// Для эффекта «Фобос» — filter: blur(0..3px) с шагом 0.1px;
-// Для эффекта «Зной» — filter: brightness(1..3) с шагом 0.1;
-// Для эффекта «Оригинал» CSS-стили filter удаляются.
-// При выборе эффекта «Оригинал» слайдер и его контейнер (элемент .img-upload__effect-level) скрываются.
-// При переключении эффектов, уровень насыщенности сбрасывается до начального значения (100%):
-// слайдер, CSS-стиль изображения и значение поля должны обновляться.
+  switch (currentEffect) {
+    case 'none': break;
+    case 'chrome': filter = `grayscale(${(value)})`; break;
+    case 'sepia': filter = `sepia(${value})`; break;
+    case 'marvin': filter = `invert(${value}%)`; break;
+    case 'phobos': filter = `blur(${value}px)`; break;
+    case 'heat': filter = `brightness(${value})`; break;
+  }
+
+  return filter;
+};
+
+sliderElement.noUiSlider.on('update', () => {
+  effectLevel.value = sliderElement.noUiSlider.get();
+  image.style.filter = calculateFilter(effectLevel.value);
+});
