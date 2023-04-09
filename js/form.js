@@ -215,19 +215,6 @@ scaleSmaller.addEventListener('click', (evt) => {
   scaleHandler(evt.target);
 });
 
-// const detectEffect = (effect) => {
-//   switch (effect) {
-//     case 'effect-none': currentEffect = 'none'; break;
-//     case 'effect-chrome': currentEffect = 'chrome'; break;
-//     case 'effect-sepia': currentEffect = 'sepia'; break;
-//     case 'effect-marvin': currentEffect = 'marvin'; break;
-//     case 'effect-phobos': currentEffect = 'phobos'; break;
-//     case 'effect-heat': currentEffect = 'heat'; break;
-//   }
-
-//   return currentEffect;
-// };
-
 const applyEffect = (effect) => {
   switch (effect) {
     case 'effect-none': currentEffect = 'none'; break;
