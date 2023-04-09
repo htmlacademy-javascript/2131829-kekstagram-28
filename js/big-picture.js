@@ -10,6 +10,7 @@ const commentsLoader = bigPicture.querySelector('.comments-loader');
 const bigPictureCancel = document.querySelector('.big-picture__cancel');
 
 let loadedCommentsCount = 0;
+let commentData;
 
 const createComment = (comment) => {
   const socialComment = document.createElement('li');
@@ -48,35 +49,33 @@ const renderComents = (data) => {
     loadedCommentsCount + COMMENTS_PORTION_SIZE - 1 < data.comments.length ?
       loadedCommentsCount + COMMENTS_PORTION_SIZE : data.comments.length;
 
-  commentZone.append(
-    createCommentsFragment(
-      data.comments.slice(loadedCommentsCount, lastCommentToLoad)
-    )
-  );
+  const commentFragment = createCommentsFragment(data.comments.slice(loadedCommentsCount, lastCommentToLoad));
+  commentZone.append(commentFragment);
+};
+
+const commentsLoadHandler = () => {
+  renderComents(commentData);
+
+  if (loadedCommentsCount >= commentData.comments.length) {
+    commentsLoader.classList.add('hidden');
+  }
 };
 
 export const showPhoto = (data) => {
   bigPicture.classList.remove('hidden');
 
-  bigPictureImage.src = data.url;
-  likesCount.textContent = data.likes;
-  comentsCount.textContent = data.comments.length;
-  socialCaption.textContent = data.description;
+  commentData = data;
+  bigPictureImage.src = commentData.url;
+  likesCount.textContent = commentData.likes;
+  comentsCount.textContent = commentData.comments.length;
+  socialCaption.textContent = commentData.description;
 
   commentZone.replaceChildren();
-  renderComents(data);
+  renderComents(commentData);
   document.body.classList.add('modal-open');
 
-  if (loadedCommentsCount < data.comments.length) {
-    const renderMoreComments = () => {
-      renderComents(data);
-
-      if (loadedCommentsCount >= data.comments.length) {
-        commentsLoader.classList.add('hidden');
-      }
-    };
-
-    commentsLoader.addEventListener('click', renderMoreComments);
+  if (loadedCommentsCount < commentData.comments.length) {
+    commentsLoader.addEventListener('click', commentsLoadHandler);
   } else {
     commentsLoader.classList.add('hidden');
   }
@@ -91,6 +90,7 @@ export const closeShownPhoto = () => {
   likesCount.textContent = '';
   comentsCount.textContent = '';
   loadedCommentsCount = 0;
+  commentData = '';
 };
 
 bigPictureCancel.addEventListener('click', closeShownPhoto);

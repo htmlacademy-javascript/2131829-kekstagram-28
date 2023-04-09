@@ -1,14 +1,63 @@
 const HASHTAG_REGEXP = /^#[a-zа-яё0-9]{1,19}$/i;
 const HASHTAGS_LIMIT = 5;
+const MAX_COMMENT_LENGTH = 140;
 const ERROR_MESSAGES = {
   badHashtag : 'Хештег должен начинаться с # и содержать только буквы и цифры!',
-  longComment : 'Комментарий не больше 140 символов!',
+  longComment : `Комментарий не больше ${MAX_COMMENT_LENGTH} символов!`,
   dublicates : 'Дублирование хештегов запрещено!',
   limitExceeded : `Не более ${HASHTAGS_LIMIT} хештегов!`
 };
 const MAX_SCALE = 100;
 const MIN_SCALE = 25;
 const DEFAULT_SCALE = 100;
+const SCALE_STEP = 25;
+const DEFAULT_SLIDER = {
+  range: {
+    min: 0,
+    max: 100,
+  },
+  start: 80,
+  step: 1,
+  connect: 'lower',
+};
+const SLIDER_OPTIONS = {
+  chrome: {
+    range: {
+      min: 0,
+      max: 1,
+    },
+    start: 1,
+    step: 0.1,},
+  sepia: {
+    range: {
+      min: 0,
+      max: 1,
+    },
+    start: 1,
+    step: 0.1,},
+  marvin: {
+    range: {
+      min: 0,
+      max: 100,
+    },
+    start: 100,
+    step: 1,},
+  phobos: {
+    range: {
+      min: 0,
+      max: 3,
+    },
+    start: 3,
+    step: 0.1,},
+  heat: {
+    range: {
+      min: 1,
+      max: 3,
+    },
+    start: 3,
+    step: 0.1,},
+};
+
 const imageLoader = document.querySelector('#upload-file');
 const imgUploadOverlay = document.querySelector('.img-upload__overlay');
 const imageLoaderForm = document.querySelector('.img-upload__form');
@@ -29,26 +78,30 @@ let currentEffect = 'none';
 let scaleNumber = DEFAULT_SCALE;
 let message = '';
 
-export const renderLoaderForm = () => {
+export const showArticleForm = () => {
   imgUploadOverlay.classList.remove('hidden');
   document.body.classList.add('modal-open');
   scaleValue.value = `${DEFAULT_SCALE}%`;
   scaleNumber = DEFAULT_SCALE;
-  image.style = '';
+  image.removeAttribute('style');
   sliderContainer.classList.add('hidden');
   hashtagsField.value = '';
   commentField.value = '';
 };
 
-export const closeLoaderForm = () => {
+export const hideArticleForm = () => {
   imgUploadOverlay.classList.add('hidden');
   document.body.classList.remove('modal-open');
   imageLoader.value = '';
   imageLoader.file = '';
 };
 
-imageLoader.addEventListener('change', renderLoaderForm);
-closeImageLoaderButton.addEventListener('click', closeLoaderForm);
+const showArticleFormHandler = () => {
+  showArticleForm();
+};
+
+imageLoader.addEventListener('change', showArticleFormHandler);
+closeImageLoaderButton.addEventListener('click', hideArticleForm);
 
 const pristine = new Pristine(imageLoaderForm, {
   classTo: 'img-upload__field-wrapper',
@@ -61,54 +114,56 @@ imageLoaderForm.addEventListener('submit', (evt) => {
   pristine.validate();
 });
 
-const checkHashtag = (data) => HASHTAG_REGEXP.test(data);
+const isTagValid = (data) => HASHTAG_REGEXP.test(data);
 
-const haveDublicates = (data) => {
-  for (let i = 0; i < data.length - 1; i++) {
-    const testData = data.map((value) => value.toLowerCase());
+const isTagsUnique = (data) => {
+  const dataSet = new Set(data.map((value) => value.toLowerCase()));
 
-    if (testData.splice(i, 1).includes(data[i].toLowerCase())) {
-      return true;
-    }
+  if (dataSet.size < data.length) {
+    return false;
   }
 
-  return false;
+  return true;
 };
 
-function validateHashtags (value) {
-  if (!value) {
+const isHashtagsValid = (value) => {
+  const trimmedValue = value.trim();
+  if (!trimmedValue) {
     return true;
   }
 
-  const hashtags = value.trim().split(' '); //не знаю как быть, если теги разделены несколькими пробелами
+  const hashtags = trimmedValue
+    .split(' ')
+    .filter((tag) => tag !== '');
 
   if (hashtags.length > HASHTAGS_LIMIT) {
     message = ERROR_MESSAGES.limitExceeded;
     return false;
   }
 
-  if (haveDublicates(hashtags)) {
+  if (!isTagsUnique(hashtags)) {
     message = ERROR_MESSAGES.dublicates;
     return false;
   }
 
   for (let i = 0; i < hashtags.length; i ++) {
-    if (!checkHashtag(hashtags[i])) {
+    if (!isTagValid(hashtags[i])) {
       message = ERROR_MESSAGES.badHashtag;
       return false;
     }
   }
 
   return true;
-}
+};
 
-function validateComment (value) {
+const isCommentValid = (value) => {
   message = ERROR_MESSAGES.longComment;
-  return value.length <= 140;
-}
 
-pristine.addValidator(hashtagsField, validateHashtags, () => message);
-pristine.addValidator(commentField, validateComment, () => message);
+  return value.length <= MAX_COMMENT_LENGTH;
+};
+
+pristine.addValidator(hashtagsField, isHashtagsValid, () => message);
+pristine.addValidator(commentField, isCommentValid, () => message);
 
 hashtagsField.addEventListener('keydown', (evt) => {
   if (evt.key === 'Escape') {
@@ -124,23 +179,21 @@ commentField.addEventListener('keydown', (evt) => {
 
 document.addEventListener('keydown', (evt) => {
   if (evt.key === 'Escape') {
-    closeLoaderForm();
+    hideArticleForm();
   }
 });
-
-const scaleUp = () => {
-  scaleNumber += 25;
-};
-
-const scaleDown = () => {
-  scaleNumber -= 25;
-};
 
 const transformImage = () => {
   image.style.transform = `scale(${scaleNumber / 100})`;
 };
 
-const makeScale = () => {
+const scaleHandler = (target) => {
+  if (target.classList.contains('scale__control--smaller')) {
+    scaleNumber -= SCALE_STEP;
+  } else if (target.classList.contains ('scale__control--bigger')) {
+    scaleNumber += SCALE_STEP;
+  }
+
   if (scaleNumber > MAX_SCALE) {
     scaleNumber = MAX_SCALE;
   }
@@ -153,20 +206,29 @@ const makeScale = () => {
   transformImage();
 };
 
-const scaleImageUp = () => {
-  scaleUp();
-  makeScale();
-};
 
-const scaleImageDown = () => {
-  scaleDown();
-  makeScale();
-};
+scaleBigger.addEventListener('click', (evt) => {
+  scaleHandler(evt.target);
+});
 
-scaleBigger.addEventListener('click', scaleImageUp);
-scaleSmaller.addEventListener('click', scaleImageDown);
+scaleSmaller.addEventListener('click', (evt) => {
+  scaleHandler(evt.target);
+});
 
-const detectEffect = (effect) => {
+// const detectEffect = (effect) => {
+//   switch (effect) {
+//     case 'effect-none': currentEffect = 'none'; break;
+//     case 'effect-chrome': currentEffect = 'chrome'; break;
+//     case 'effect-sepia': currentEffect = 'sepia'; break;
+//     case 'effect-marvin': currentEffect = 'marvin'; break;
+//     case 'effect-phobos': currentEffect = 'phobos'; break;
+//     case 'effect-heat': currentEffect = 'heat'; break;
+//   }
+
+//   return currentEffect;
+// };
+
+const applyEffect = (effect) => {
   switch (effect) {
     case 'effect-none': currentEffect = 'none'; break;
     case 'effect-chrome': currentEffect = 'chrome'; break;
@@ -176,98 +238,42 @@ const detectEffect = (effect) => {
     case 'effect-heat': currentEffect = 'heat'; break;
   }
 
-  return currentEffect;
-};
-
-const applyEffect = (effect) => {
   image.className = '';
-  image.classList.add(`effects__preview--${detectEffect(effect)}`);
+  image.classList.add(`effects__preview--${currentEffect}`);
 };
 
-noUiSlider.create(sliderElement, {
-  range: {
-    min: 0,
-    max: 100,
-  },
-  start: 80,
-  step: 1,
-  connect: 'lower',
-});
+noUiSlider.create(sliderElement, DEFAULT_SLIDER);
 
 const configureSlider = () => {
-  if (currentEffect !== 'none') {
+  if (currentEffect === 'none') {
+    sliderContainer.classList.add('hidden');
+    sliderElement.noUiSlider.updateOptions(DEFAULT_SLIDER);
+  } else {
     sliderContainer.classList.remove('hidden');
-  }
-
-  switch (currentEffect) {
-    case 'none':
-      sliderContainer.classList.add('hidden');
-      break;
-    case 'chrome': sliderElement.noUiSlider.updateOptions({
-      range: {
-        min: 0,
-        max: 1,
-      },
-      start: 1,
-      step: 0.1,
-    }); break;
-    case 'sepia': sliderElement.noUiSlider.updateOptions({
-      range: {
-        min: 0,
-        max: 1,
-      },
-      start: 1,
-      step: 0.1,
-    }); break;
-    case 'marvin': sliderElement.noUiSlider.updateOptions({
-      range: {
-        min: 0,
-        max: 100,
-      },
-      start: 100,
-      step: 1,
-    }); break;
-    case 'phobos': sliderElement.noUiSlider.updateOptions({
-      range: {
-        min: 0,
-        max: 3,
-      },
-      start: 3,
-      step: 0.1,
-    }); break;
-    case 'heat': sliderElement.noUiSlider.updateOptions({
-      range: {
-        min: 1,
-        max: 3,
-      },
-      start: 3,
-      step: 0.1,
-    }); break;
+    sliderElement.noUiSlider.updateOptions(SLIDER_OPTIONS[currentEffect]);
   }
 };
 
 effects.addEventListener('change', (evt) => {
-  //image.style = '';
+  image.removeAttribute('style');
   applyEffect(evt.target.id);
   configureSlider();
 });
 
-const calculateFilter = (value) => {
-  let filter;
-
+const getFilterValue = (value) => {
   switch (currentEffect) {
-    case 'none': break;
-    case 'chrome': filter = `grayscale(${(value)})`; break;
-    case 'sepia': filter = `sepia(${value})`; break;
-    case 'marvin': filter = `invert(${value}%)`; break;
-    case 'phobos': filter = `blur(${value}px)`; break;
-    case 'heat': filter = `brightness(${value})`; break;
+    case 'chrome': return `grayscale(${(value)})`;
+    case 'sepia': return `sepia(${value})`;
+    case 'marvin': return `invert(${value}%)`;
+    case 'phobos': return `blur(${value}px)`;
+    case 'heat': return `brightness(${value})`;
+    default: return '';
   }
-
-  return filter;
 };
 
 sliderElement.noUiSlider.on('update', () => {
-  effectLevel.value = sliderElement.noUiSlider.get();
-  image.style.filter = calculateFilter(effectLevel.value);
+  const value = sliderElement.noUiSlider.get();
+
+  effectLevel.value = value;
+  image.style.filter = getFilterValue(value);
 });

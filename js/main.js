@@ -7,7 +7,7 @@ const descriptions = createDescriptions(25);
 
 renderPhotos(descriptions);
 
-// showPhoto(createDescriptions(1)[0]);
+//showPhoto(createDescriptions(1)[0]);
 
 // document.addEventListener('keydown', (evt) => {
 //   if (evt.code === 'Escape') {
