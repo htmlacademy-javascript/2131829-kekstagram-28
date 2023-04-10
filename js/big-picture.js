@@ -36,25 +36,32 @@ const createCommentsFragment = (comments) => {
 
   for (let i = 0; i < comments.length; i++) {
     commentsContainer.append(createComment(comments[i]));
-    loadedCommentsCount++;
   }
-
-  shownComentsCount.textContent = loadedCommentsCount;
 
   return commentsContainer;
 };
 
-const renderComents = (data) => {
-  const lastCommentToLoad =
-    loadedCommentsCount + COMMENTS_PORTION_SIZE - 1 < data.comments.length ?
-      loadedCommentsCount + COMMENTS_PORTION_SIZE : data.comments.length;
+const renderComents = (data, startIndex, endIndex) => {
+  const commentFragment =
+    createCommentsFragment(
+      data.comments.slice(startIndex, endIndex)
+    );
 
-  const commentFragment = createCommentsFragment(data.comments.slice(loadedCommentsCount, lastCommentToLoad));
   commentZone.append(commentFragment);
 };
 
+const showComments = () => {
+  const lastCommentToLoad =
+  loadedCommentsCount + COMMENTS_PORTION_SIZE - 1 < commentData.comments.length ?
+    loadedCommentsCount + COMMENTS_PORTION_SIZE : commentData.comments.length;
+
+  renderComents(commentData, loadedCommentsCount, lastCommentToLoad);
+  loadedCommentsCount += lastCommentToLoad - loadedCommentsCount;
+  shownComentsCount.textContent = loadedCommentsCount;
+};
+
 const commentsLoadHandler = () => {
-  renderComents(commentData);
+  showComments();
 
   if (loadedCommentsCount >= commentData.comments.length) {
     commentsLoader.classList.add('hidden');
@@ -71,7 +78,7 @@ export const showPhoto = (data) => {
   socialCaption.textContent = commentData.description;
 
   commentZone.replaceChildren();
-  renderComents(commentData);
+  showComments();
   document.body.classList.add('modal-open');
 
   if (loadedCommentsCount < commentData.comments.length) {
