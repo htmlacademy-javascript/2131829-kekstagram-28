@@ -31,7 +31,7 @@ const createComment = (id) => ({
   authorName: NAMES[getRandomInteger(0, NAMES.length - 1)]
 });
 
-const createDescription = (id) => ({
+const createPhoto = (id) => ({
   id: id,
   url: `photos/${id}.jpg`,
   description: `Фотография №${id}`,
@@ -39,4 +39,4 @@ const createDescription = (id) => ({
   comments: Array.from({length: getRandomInteger(4, MESSAGES.length)}, (_, index) => createComment(index + 1))
 });
 
-export const createDescriptions = (count) => Array.from({length: count}, (_, index) => createDescription(index + 1));
+export const createPhotos = (count) => Array.from({length: count}, (_, index) => createPhoto(index + 1));

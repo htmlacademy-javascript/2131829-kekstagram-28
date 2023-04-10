@@ -1408,3 +1408,18 @@ main {
 .hidden {
   display: none;
 }
+
+.img-upload__field-wrapper {
+  position: relative;
+}
+
+.validate-error {
+  position: absolute;
+  top: -20px;
+  left: 0;
+  right: 0;
+  font-family: "Open Sans", "Arial", sans-serif;
+  font-weight: 400;
+  color: #ffffff;
+  font-size: 10px;
+}
