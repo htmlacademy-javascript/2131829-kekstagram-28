@@ -1,3 +1,5 @@
+import {sendData} from './load.js';
+
 const HASHTAG_REGEXP = /^#[a-zа-яё0-9]{1,19}$/i;
 const HASHTAGS_LIMIT = 5;
 const MAX_COMMENT_LENGTH = 140;
@@ -78,30 +80,45 @@ const effects = imageLoaderForm.querySelector('.effects__list');
 const sliderElement = imageLoaderForm.querySelector('.effect-level__slider');
 const effectLevel = imageLoaderForm.querySelector('.effect-level__value');
 const sliderContainer = imageLoaderForm.querySelector('.img-upload__effect-level');
+const errorTemplate = document.querySelector('#error').content;
+const successTemplate = document.querySelector('#success').content;
 
-let activeFilter = 'none';
-let scaleNumber = DEFAULT_SCALE;
+let activeFilter;
+let scaleNumber;
 let hashtags = '';
+
+const showAlert = (template) => {
+  const alert = template.cloneNode(true);
+
+  document.body.append(alert);
+};
 
 const setImageScale = (value) => {
   scaleValue.value = `${value}%`;
   image.style.transform = `scale(${value / 100})`;
 };
 
+const resetForm = () => {
+  setImageScale(DEFAULT_SCALE);
+  scaleNumber = DEFAULT_SCALE;
+  activeFilter = 'none';
+  image.removeAttribute('style');
+  image.removeAttribute('class');
+  hashtagsField.value = '';
+  commentField.value = '';
+};
+
 export const showArticleForm = () => {
   imgUploadOverlay.classList.remove('hidden');
   document.body.classList.add('modal-open');
-  setImageScale(DEFAULT_SCALE);
-  scaleNumber = DEFAULT_SCALE;
-  image.removeAttribute('style');
   sliderContainer.classList.add('hidden');
-  hashtagsField.value = '';
-  commentField.value = '';
+  resetForm();
 };
 
 const hideArticleForm = () => {
   imgUploadOverlay.classList.add('hidden');
   document.body.classList.remove('modal-open');
+  resetForm();
   imageLoader.value = '';
   imageLoader.file = '';
 };
@@ -133,10 +150,40 @@ const getHashtags = (value) => {
   hashtags = trimmedValue.split(/\s+/);
 };
 
+const sendPhoto = () => {
+  sendData(new FormData(imageLoaderForm))
+    .then(() => {
+      showAlert(successTemplate);
+      hideArticleForm();
+
+      const successMessage = document.querySelector('.success');
+      const successButton = successMessage.querySelector('.success__button');
+
+      successButton.addEventListener('click', () => {
+        successMessage.remove();
+      });
+    })
+    .catch(
+      () => {
+        showAlert(errorTemplate);
+
+        const errorMessage = document.querySelector('.error');
+        const errorButton = errorMessage.querySelector('.error__button');
+
+        errorButton.addEventListener('click', () => {
+          errorMessage.remove();
+        });
+      }
+    );
+};
+
 imageLoaderForm.addEventListener('submit', (evt) => {
   evt.preventDefault();
   getHashtags(hashtagsField.value);
-  pristine.validate();
+
+  if (pristine.validate()) {
+    sendPhoto();
+  }
 });
 
 const isTagValid = (data) => HASHTAG_REGEXP.test(data);
@@ -184,21 +231,38 @@ commentField.addEventListener('keydown', (evt) => {
 
 document.addEventListener('keydown', (evt) => {
   if (evt.key === 'Escape') {
+    const modal = document.body.lastElementChild;
+
+    if (modal.classList.contains('success')) {
+      modal.remove();
+      return;
+    }
+
+    if (modal.classList.contains('error')) {
+      modal.remove();
+      return;
+    }
+
     hideArticleForm();
   }
 });
 
+document.addEventListener('click', (evt) => {
+  if (evt.target.classList.contains('success') || evt.target.classList.contains('error')) {
+    evt.target.remove();
+  }
+});
 
 const scaleHandler = (evt) => {
   const target = evt.target;
 
-  if (scaleNumber + SCALE_STEP <= MAX_SCALE && target === scaleBigger) {
-    scaleNumber += SCALE_STEP;
+  if (target === scaleBigger) {
+    scaleNumber = Math.min(scaleNumber + SCALE_STEP, MAX_SCALE);
     setImageScale(scaleNumber);
   }
 
-  if (scaleNumber - SCALE_STEP >= MIN_SCALE && target === scaleSmaller) {
-    scaleNumber -= SCALE_STEP;
+  if (target === scaleSmaller) {
+    scaleNumber = Math.max(scaleNumber - SCALE_STEP, MIN_SCALE);
     setImageScale(scaleNumber);
   }
 };
@@ -250,3 +314,4 @@ sliderElement.noUiSlider.on('update', () => {
   effectLevel.value = value;
   image.style.filter = getFilterValue(value);
 });
+

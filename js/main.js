@@ -1,8 +1,16 @@
-import {createPhotos} from './photo-data.js';
 import {renderPhotos} from './gallery.js';
 import './big-picture.js';
 import './form.js';
+import {getData} from './load.js';
+import {showAlert} from './utils.js';
 
-const photos = createPhotos(25);
+getData()
+  .then((data) => {
+    renderPhotos(data);
+  })
+  .catch(
+    (err) => {
+      showAlert(err.message);
+    }
+  );
 
-renderPhotos(photos);
