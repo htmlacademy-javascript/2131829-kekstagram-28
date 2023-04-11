@@ -1,4 +1,5 @@
 const photoTemplate = document.querySelector('#picture').content;
+const pictures = document.querySelector('.pictures');
 
 const createPhoto = (photoData) => {
   const photo = photoTemplate.cloneNode(true);
@@ -10,8 +11,6 @@ const createPhoto = (photoData) => {
   return photo;
 };
 
-const pictures = document.querySelector('.pictures');
-
 export const renderPhotos = (photosData) => {
   const photoContainer = document.createDocumentFragment();
 
@@ -21,4 +20,3 @@ export const renderPhotos = (photosData) => {
 
   pictures.append(photoContainer);
 };
-
