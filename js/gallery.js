@@ -40,7 +40,7 @@ const sortRandom = (data) => {
 
 const sortDiscussed = (data) => data.slice().sort((photoA, photoB) => photoB.likes - photoA.likes);
 
-const sortPhotos = (data, mode) => {
+const getSortedPhotos = (data, mode) => {
   switch (mode) {
     case 'filter-default': return data;
     case 'filter-random': return sortRandom(data);
@@ -49,15 +49,22 @@ const sortPhotos = (data, mode) => {
   }
 };
 
-export const renderPhotos = (sortMode = 'filter-default') => {
+const renderPhotos = (data) => {
   const photoContainer = document.createDocumentFragment();
-  const sortedData = sortPhotos(loadedPhotosData, sortMode);
 
-  sortedData.forEach((data) => {
-    photoContainer.append(createPhoto(data));
+  data.forEach((dataElement) => {
+    photoContainer.append(createPhoto(dataElement));
   });
 
   pictures.append(photoContainer);
+};
+
+const activateFilter = (filter) => {
+  filters
+    .querySelector('.img-filters__button--active')
+    .classList.remove('img-filters__button--active');
+
+  filter.classList.add('img-filters__button--active');
 };
 
 const onFiltersClick = debounce((evt) => {
@@ -66,12 +73,8 @@ const onFiltersClick = debounce((evt) => {
       .querySelectorAll('.picture')
       .forEach((picture) => picture.remove());
 
-    renderPhotos(evt.target.id);
-
-    filters
-      .querySelector('.img-filters__button--active')
-      .classList.remove('img-filters__button--active');
-    evt.target.classList.add('img-filters__button--active');
+    renderPhotos(getSortedPhotos(loadedPhotosData, evt.target.id));
+    activateFilter(evt.target);
   }
 });
 
