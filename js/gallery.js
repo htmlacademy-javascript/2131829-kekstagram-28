@@ -1,5 +1,7 @@
 import {getRandomInteger, debounce} from './utils.js';
-import {showPhoto} from './big-picture.js';
+import {openBigPicture} from './big-picture.js';
+import {getData} from './load.js';
+import {showErrorMessage} from './dialog.js';
 
 const RANDOM_PHOTOS_COUNT = 10;
 
@@ -23,23 +25,22 @@ const createPhoto = (photoData) => {
 
 const sortRandom = (data) => {
   const sorted = [];
+  const count = data.length < RANDOM_PHOTOS_COUNT ? data.length : RANDOM_PHOTOS_COUNT;
 
-  while (sorted.length < RANDOM_PHOTOS_COUNT) {
-    const dataId = data[getRandomInteger(0, data.length - 1)].id;
+  while (sorted.length < count) {
+    const unsortedData = data[getRandomInteger(0, data.length - 1)];
 
-    if (!sorted.includes(dataId)) {
-      sorted.push(dataId);
+    if (!sorted.includes(unsortedData)) {
+      sorted.push(unsortedData);
     }
   }
 
-  return data.filter((photo) => sorted.includes(photo.id));
+  return sorted;
 };
 
-const compareByLikes = (photoA, photoB) => photoB.likes - photoA.likes;
+const sortDiscussed = (data) => data.slice().sort((photoA, photoB) => photoB.likes - photoA.likes);
 
-const sortDiscussed = (data) => data.slice().sort(compareByLikes);
-
-const sortPhotos = (data, mode) => {
+const getSortedPhotos = (data, mode) => {
   switch (mode) {
     case 'filter-default': return data;
     case 'filter-random': return sortRandom(data);
@@ -48,17 +49,22 @@ const sortPhotos = (data, mode) => {
   }
 };
 
-export const renderPhotos = (photosData, sortMode = 'filter-default') => {
+const renderPhotos = (data) => {
   const photoContainer = document.createDocumentFragment();
-  const sortedData = sortPhotos(photosData, sortMode);
 
-  loadedPhotosData = photosData;
-
-  sortedData.forEach((data) => {
-    photoContainer.append(createPhoto(data));
+  data.forEach((dataElement) => {
+    photoContainer.append(createPhoto(dataElement));
   });
 
   pictures.append(photoContainer);
+};
+
+const activateFilter = (filter) => {
+  filters
+    .querySelector('.img-filters__button--active')
+    .classList.remove('img-filters__button--active');
+
+  filter.classList.add('img-filters__button--active');
 };
 
 const onFiltersClick = debounce((evt) => {
@@ -67,23 +73,33 @@ const onFiltersClick = debounce((evt) => {
       .querySelectorAll('.picture')
       .forEach((picture) => picture.remove());
 
-    renderPhotos(loadedPhotosData, evt.target.id);
-
-    filters
-      .querySelector('.img-filters__button--active')
-      .classList.remove('img-filters__button--active');
-    evt.target.classList.add('img-filters__button--active');
+    renderPhotos(getSortedPhotos(loadedPhotosData, evt.target.id));
+    activateFilter(evt.target);
   }
 });
 
 filters.addEventListener('click', onFiltersClick);
 
 const onPictureClick = (evt) => {
-  if (evt.target.hasAttribute('data-id')) {
-    const dataId = Number(evt.target.getAttribute('data-id'));
+  const data = evt.target.dataset.id;
 
-    showPhoto(loadedPhotosData[dataId]);
+  if (data) {
+    openBigPicture(loadedPhotosData[Number(data)]);
   }
 };
 
 pictures.addEventListener('click', onPictureClick);
+
+const sortFilters = document.querySelector('.img-filters');
+
+getData()
+  .then((data) => {
+    loadedPhotosData = data;
+    renderPhotos(data);
+    sortFilters.classList.remove('img-filters--inactive');
+  })
+  .catch(
+    (err) => {
+      showErrorMessage(err.message);
+    }
+  );
