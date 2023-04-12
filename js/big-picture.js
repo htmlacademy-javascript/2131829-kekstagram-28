@@ -1,6 +1,6 @@
 const COMMENTS_PORTION_SIZE = 5;
 const bigPicture = document.querySelector('.big-picture');
-const bigPictureImage = bigPicture.querySelector('.big-picture__img');
+const bigPictureImage = bigPicture.querySelector('.big-picture__img').querySelector('img');
 const likesCount = bigPicture.querySelector('.likes-count');
 const comentsCount = bigPicture.querySelector('.comments-count');
 const shownComentsCount = bigPicture.querySelector('.shown-comments-count');
@@ -68,6 +68,30 @@ const commentsLoadHandler = () => {
   }
 };
 
+export const closeShownPhoto = () => {
+  document.body.classList.remove('modal-open');
+  bigPicture.classList.add('hidden');
+  commentZone.replaceChildren();
+
+  bigPictureImage.src = '';
+  likesCount.textContent = '';
+  comentsCount.textContent = '';
+  loadedCommentsCount = 0;
+  commentData = '';
+};
+
+const onDocumentKeydown = (evt) => {
+  if (evt.key === 'Escape') {
+    closeShownPhoto();
+    document.removeEventListener('keydown', onDocumentKeydown);
+  }
+};
+
+const onbigPictureCancelClick = () => {
+  closeShownPhoto();
+  document.removeEventListener('keydown', onDocumentKeydown);
+};
+
 export const showPhoto = (data) => {
   bigPicture.classList.remove('hidden');
 
@@ -81,23 +105,14 @@ export const showPhoto = (data) => {
   showComments();
   document.body.classList.add('modal-open');
 
+  document.addEventListener('keydown', onDocumentKeydown);
+
+  bigPictureCancel.addEventListener('click', onbigPictureCancelClick);
+
   if (loadedCommentsCount < commentData.comments.length) {
+    commentsLoader.classList.remove('hidden');
     commentsLoader.addEventListener('click', commentsLoadHandler);
   } else {
     commentsLoader.classList.add('hidden');
   }
 };
-
-export const closeShownPhoto = () => {
-  document.body.classList.remove('modal-open');
-  bigPicture.classList.add('hidden');
-  commentZone.replaceChildren();
-
-  bigPictureImage.src = '';
-  likesCount.textContent = '';
-  comentsCount.textContent = '';
-  loadedCommentsCount = 0;
-  commentData = '';
-};
-
-bigPictureCancel.addEventListener('click', closeShownPhoto);

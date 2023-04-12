@@ -2,16 +2,17 @@ import {renderPhotos} from './gallery.js';
 import './big-picture.js';
 import './form.js';
 import {getData} from './load.js';
-import {showAlert} from './utils.js';
+import {showErrorMessage} from './dialog.js';
+
+const filters = document.querySelector('.img-filters');
 
 getData()
   .then((data) => {
     renderPhotos(data);
+    filters.classList.remove('img-filters--inactive');
   })
   .catch(
     (err) => {
-      showAlert(err.message);
+      showErrorMessage(err.message);
     }
   );
-
-//для отличий
