@@ -68,7 +68,7 @@ const commentsLoadHandler = () => {
   }
 };
 
-export const closeShownPhoto = () => {
+const closeBigPicture = () => {
   document.body.classList.remove('modal-open');
   bigPicture.classList.add('hidden');
   commentZone.replaceChildren();
@@ -82,17 +82,20 @@ export const closeShownPhoto = () => {
 
 const onDocumentKeydown = (evt) => {
   if (evt.key === 'Escape') {
-    closeShownPhoto();
-    document.removeEventListener('keydown', onDocumentKeydown);
+    closeWindow();
   }
 };
 
-const onbigPictureCancelClick = () => {
-  closeShownPhoto();
+function closeWindow() {
+  closeBigPicture();
   document.removeEventListener('keydown', onDocumentKeydown);
+}
+
+const onBigPictureCancelClick = () => {
+  closeWindow();
 };
 
-export const showPhoto = (data) => {
+export const openBigPicture = (data) => {
   bigPicture.classList.remove('hidden');
 
   commentData = data;
@@ -106,8 +109,7 @@ export const showPhoto = (data) => {
   document.body.classList.add('modal-open');
 
   document.addEventListener('keydown', onDocumentKeydown);
-
-  bigPictureCancel.addEventListener('click', onbigPictureCancelClick);
+  bigPictureCancel.addEventListener('click', onBigPictureCancelClick);
 
   if (loadedCommentsCount < commentData.comments.length) {
     commentsLoader.classList.remove('hidden');

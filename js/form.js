@@ -1,5 +1,5 @@
 import {sendData} from './load.js';
-import {showSuccess, showError} from './dialog.js';
+import {showAlert} from './dialog.js';
 
 const FILE_TYPES = ['jpg', 'jpeg', 'png'];
 const HASHTAG_REGEXP = /^#[a-zа-яё0-9]{1,19}$/i;
@@ -87,12 +87,12 @@ const submitButton = imageLoaderForm.querySelector('#upload-submit');
 let activeFilter;
 let scaleNumber;
 
-const blockSubmitButton = () => {
-  submitButton.disabled = true;
-};
-
-const unblockSubmitButton = () => {
-  submitButton.disabled = false;
+const turnSubmitButton = (action) => {
+  if (action === 'on') {
+    submitButton.disabled = false;
+  } else if (action === 'off') {
+    submitButton.disabled = true;
+  }
 };
 
 const setImageScale = (value) => {
@@ -120,25 +120,8 @@ const hideArticleForm = () => {
 
 const onDocumentKeydown = (evt) => {
   if (evt.key === 'Escape') {
-    const modal = document.body.lastElementChild;
-
-    if (modal.classList.contains('success') || modal.classList.contains('error')) {
-      modal.remove();
-      document.removeEventListener('click', onDocumentKeydown);
-
-      return;
-    }
-
     hideArticleForm();
     document.removeEventListener('keydown', onDocumentKeydown);
-  }
-};
-
-const onDocumentClick = (evt) => {
-  if (evt.target.classList.contains('success') || evt.target.classList.contains('error')) {
-    evt.target.remove();
-    document.removeEventListener('click', onDocumentKeydown);
-    document.removeEventListener('click', onDocumentClick);
   }
 };
 
@@ -189,44 +172,28 @@ const parseHashtags = (value) => {
 };
 
 const onSuccess = () => {
-  showSuccess();
-  document.addEventListener('click', onDocumentClick);
-
+  showAlert('success');
   hideArticleForm();
   document.removeEventListener('keydown', onDocumentKeydown);
-
-  const successMessage = document.querySelector('.success');
-  const successButton = successMessage.querySelector('.success__button');
-
-  successButton.addEventListener('click', () => {
-    successMessage.remove();
-    document.removeEventListener('click', onDocumentClick);
-  });
 };
 
 const onError = () => {
-  showError();
-  document.addEventListener('click', onDocumentClick);
-
-  const errorMessage = document.querySelector('.error');
-  const errorButton = errorMessage.querySelector('.error__button');
-
-  errorButton.addEventListener('click', () => {
-    errorMessage.remove();
-    document.addEventListener('click', onDocumentClick);
-  });
+  showAlert('error');
 };
 
 imageLoaderForm.addEventListener('submit', (evt) => {
   evt.preventDefault();
 
   if (pristine.validate()) {
-    blockSubmitButton();
+    turnSubmitButton('off');
+    const data = new FormData(imageLoaderForm);
 
-    sendData(new FormData(imageLoaderForm))
+    sendData(data)
       .then(onSuccess)
-      .catch(onError)
-      .finally(unblockSubmitButton);
+      .finally(() => {
+        turnSubmitButton('on');
+      })
+      .catch(onError);
   }
 });
 
