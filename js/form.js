@@ -1,5 +1,7 @@
 import {sendData} from './load.js';
+import {showSuccess, showError} from './dialog.js';
 
+const FILE_TYPES = ['jpg', 'jpeg', 'png'];
 const HASHTAG_REGEXP = /^#[a-zа-яё0-9]{1,19}$/i;
 const HASHTAGS_LIMIT = 5;
 const MAX_COMMENT_LENGTH = 140;
@@ -80,17 +82,17 @@ const effects = imageLoaderForm.querySelector('.effects__list');
 const sliderElement = imageLoaderForm.querySelector('.effect-level__slider');
 const effectLevel = imageLoaderForm.querySelector('.effect-level__value');
 const sliderContainer = imageLoaderForm.querySelector('.img-upload__effect-level');
-const errorTemplate = document.querySelector('#error').content;
-const successTemplate = document.querySelector('#success').content;
+const submitButton = imageLoaderForm.querySelector('#upload-submit');
 
 let activeFilter;
 let scaleNumber;
-let hashtags = '';
 
-const showAlert = (template) => {
-  const alert = template.cloneNode(true);
+const blockSubmitButton = () => {
+  submitButton.disabled = true;
+};
 
-  document.body.append(alert);
+const unblockSubmitButton = () => {
+  submitButton.disabled = false;
 };
 
 const setImageScale = (value) => {
@@ -108,13 +110,6 @@ const resetForm = () => {
   commentField.value = '';
 };
 
-export const showArticleForm = () => {
-  imgUploadOverlay.classList.remove('hidden');
-  document.body.classList.add('modal-open');
-  sliderContainer.classList.add('hidden');
-  resetForm();
-};
-
 const hideArticleForm = () => {
   imgUploadOverlay.classList.add('hidden');
   document.body.classList.remove('modal-open');
@@ -123,12 +118,54 @@ const hideArticleForm = () => {
   imageLoader.file = '';
 };
 
+const onDocumentKeydown = (evt) => {
+  if (evt.key === 'Escape') {
+    const modal = document.body.lastElementChild;
+
+    if (modal.classList.contains('success') || modal.classList.contains('error')) {
+      modal.remove();
+      document.removeEventListener('click', onDocumentKeydown);
+
+      return;
+    }
+
+    hideArticleForm();
+    document.removeEventListener('keydown', onDocumentKeydown);
+  }
+};
+
+const onDocumentClick = (evt) => {
+  if (evt.target.classList.contains('success') || evt.target.classList.contains('error')) {
+    evt.target.remove();
+    document.removeEventListener('click', onDocumentKeydown);
+  }
+};
+
+export const showArticleForm = () => {
+  imgUploadOverlay.classList.remove('hidden');
+  document.body.classList.add('modal-open');
+  sliderContainer.classList.add('hidden');
+  resetForm();
+
+  document.addEventListener('keydown', onDocumentKeydown);
+};
+
 const onImageLoaderChange = () => {
+  const file = imageLoader.files[0];
+  const fileName = file.name.toLowerCase();
+
+  const matches = FILE_TYPES.some((it) => fileName.endsWith(it));
+
+  if (matches) {
+    image.src = URL.createObjectURL(file);
+  }
+
   showArticleForm();
 };
 
 const onCloseImageLoaderButtonClick = () => {
   hideArticleForm();
+  document.removeEventListener('keydown', onDocumentKeydown);
 };
 
 imageLoader.addEventListener('change', onImageLoaderChange);
@@ -140,56 +177,63 @@ const pristine = new Pristine(imageLoaderForm, {
   errorTextClass: 'validate-error',
 }, false);
 
-const getHashtags = (value) => {
+const parseHashtags = (value) => {
   const trimmedValue = value.trim();
 
   if (!trimmedValue) {
     return '';
   }
 
-  hashtags = trimmedValue.split(/\s+/);
+  return trimmedValue.split(/\s+/);
 };
 
-const sendPhoto = () => {
-  sendData(new FormData(imageLoaderForm))
-    .then(() => {
-      showAlert(successTemplate);
-      hideArticleForm();
+const onSuccess = () => {
+  showSuccess();
+  document.addEventListener('click', onDocumentClick);
 
-      const successMessage = document.querySelector('.success');
-      const successButton = successMessage.querySelector('.success__button');
+  hideArticleForm();
+  document.removeEventListener('keydown', onDocumentKeydown);
 
-      successButton.addEventListener('click', () => {
-        successMessage.remove();
-      });
-    })
-    .catch(
-      () => {
-        showAlert(errorTemplate);
+  const successMessage = document.querySelector('.success');
+  const successButton = successMessage.querySelector('.success__button');
 
-        const errorMessage = document.querySelector('.error');
-        const errorButton = errorMessage.querySelector('.error__button');
+  successButton.addEventListener('click', () => {
+    successMessage.remove();
+  });
+};
 
-        errorButton.addEventListener('click', () => {
-          errorMessage.remove();
-        });
-      }
-    );
+const onError = () => {
+  showError();
+  document.addEventListener('click', onDocumentClick);
+
+  const errorMessage = document.querySelector('.error');
+  const errorButton = errorMessage.querySelector('.error__button');
+
+  errorButton.addEventListener('click', () => {
+    errorMessage.remove();
+    document.addEventListener('click', onDocumentClick);
+  });
 };
 
 imageLoaderForm.addEventListener('submit', (evt) => {
   evt.preventDefault();
-  getHashtags(hashtagsField.value);
 
   if (pristine.validate()) {
-    sendPhoto();
+    blockSubmitButton();
+
+    sendData(new FormData(imageLoaderForm))
+      .then(onSuccess)
+      .catch(onError)
+      .finally(unblockSubmitButton);
   }
 });
 
 const isTagValid = (data) => HASHTAG_REGEXP.test(data);
 
 const isTagsValid = () => {
-  for (const tag of hashtags) {
+  const tags = parseHashtags(hashtagsField.value);
+
+  for (const tag of tags) {
     if (!isTagValid(tag)) {
       return false;
     }
@@ -199,16 +243,22 @@ const isTagsValid = () => {
 };
 
 const isTagsUnique = () => {
-  if (!hashtags.length) {
+  const tags = parseHashtags(hashtagsField.value);
+
+  if (!tags.length) {
     return true;
   }
 
-  const dataSet = new Set(hashtags.map((value) => value.toLowerCase()));
+  const dataSet = new Set(tags.map((value) => value.toLowerCase()));
 
-  return dataSet.size === hashtags.length;
+  return dataSet.size === tags.length;
 };
 
-const isTagsCountValid = () => hashtags.length <= HASHTAGS_LIMIT;
+const isTagsCountValid = () => {
+  const tags = parseHashtags(hashtagsField.value);
+
+  return tags.length <= HASHTAGS_LIMIT;
+};
 
 const isCommentValid = (value) => value.length <= MAX_COMMENT_LENGTH;
 
@@ -229,30 +279,6 @@ commentField.addEventListener('keydown', (evt) => {
   }
 });
 
-document.addEventListener('keydown', (evt) => {
-  if (evt.key === 'Escape') {
-    const modal = document.body.lastElementChild;
-
-    if (modal.classList.contains('success')) {
-      modal.remove();
-      return;
-    }
-
-    if (modal.classList.contains('error')) {
-      modal.remove();
-      return;
-    }
-
-    hideArticleForm();
-  }
-});
-
-document.addEventListener('click', (evt) => {
-  if (evt.target.classList.contains('success') || evt.target.classList.contains('error')) {
-    evt.target.remove();
-  }
-});
-
 const scaleHandler = (evt) => {
   const target = evt.target;
 
@@ -266,7 +292,6 @@ const scaleHandler = (evt) => {
     setImageScale(scaleNumber);
   }
 };
-
 
 scaleBigger.addEventListener('click', scaleHandler);
 scaleSmaller.addEventListener('click', scaleHandler);

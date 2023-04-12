@@ -1,5 +1,4 @@
 import {getRandomInteger} from './utils.js';
-import './utils.js';
 
 const AVATARS_COUNT = 6;
 const MESSAGES = [

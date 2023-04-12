@@ -1423,3 +1423,15 @@ main {
   color: #ffffff;
   font-size: 10px;
 }
+
+.alert {
+  z-index: 100;
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  padding: 10px 3px;
+  font-size: 18px;
+  text-align: center;
+  background-color: #8b0000;
+}
