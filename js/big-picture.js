@@ -78,8 +78,6 @@ export const closeShownPhoto = () => {
   comentsCount.textContent = '';
   loadedCommentsCount = 0;
   commentData = '';
-
-  bigPictureCancel.removeEventListener('click', closeShownPhoto);
 };
 
 const onDocumentKeydown = (evt) => {
@@ -87,6 +85,11 @@ const onDocumentKeydown = (evt) => {
     closeShownPhoto();
     document.removeEventListener('keydown', onDocumentKeydown);
   }
+};
+
+const onbigPictureCancelClick = () => {
+  closeShownPhoto();
+  document.removeEventListener('keydown', onDocumentKeydown);
 };
 
 export const showPhoto = (data) => {
@@ -104,7 +107,7 @@ export const showPhoto = (data) => {
 
   document.addEventListener('keydown', onDocumentKeydown);
 
-  bigPictureCancel.addEventListener('click', closeShownPhoto);
+  bigPictureCancel.addEventListener('click', onbigPictureCancelClick);
 
   if (loadedCommentsCount < commentData.comments.length) {
     commentsLoader.classList.remove('hidden');

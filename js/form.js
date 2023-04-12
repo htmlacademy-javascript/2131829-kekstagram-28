@@ -138,6 +138,7 @@ const onDocumentClick = (evt) => {
   if (evt.target.classList.contains('success') || evt.target.classList.contains('error')) {
     evt.target.remove();
     document.removeEventListener('click', onDocumentKeydown);
+    document.removeEventListener('click', onDocumentClick);
   }
 };
 
@@ -199,6 +200,7 @@ const onSuccess = () => {
 
   successButton.addEventListener('click', () => {
     successMessage.remove();
+    document.removeEventListener('click', onDocumentClick);
   });
 };
 
