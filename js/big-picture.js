@@ -2,8 +2,8 @@ const COMMENTS_PORTION_SIZE = 5;
 const bigPicture = document.querySelector('.big-picture');
 const bigPictureImage = bigPicture.querySelector('.big-picture__img').querySelector('img');
 const likesCount = bigPicture.querySelector('.likes-count');
-const comentsCount = bigPicture.querySelector('.comments-count');
-const shownComentsCount = bigPicture.querySelector('.shown-comments-count');
+const commentsCount = bigPicture.querySelector('.comments-count');
+const shownCommentsCount = bigPicture.querySelector('.shown-comments-count');
 const commentZone = bigPicture.querySelector('.social__comments');
 const socialCaption = bigPicture.querySelector('.social__caption');
 const commentsLoader = bigPicture.querySelector('.comments-loader');
@@ -57,7 +57,7 @@ const showComments = () => {
 
   renderComents(commentData, loadedCommentsCount, lastCommentToLoad);
   loadedCommentsCount += lastCommentToLoad - loadedCommentsCount;
-  shownComentsCount.textContent = loadedCommentsCount;
+  shownCommentsCount.textContent = loadedCommentsCount;
 };
 
 const commentsLoadHandler = () => {
@@ -75,7 +75,7 @@ const closeBigPicture = () => {
 
   bigPictureImage.src = '';
   likesCount.textContent = '';
-  comentsCount.textContent = '';
+  commentsCount.textContent = '';
   loadedCommentsCount = 0;
   commentData = '';
 };
@@ -101,7 +101,7 @@ export const openBigPicture = (data) => {
   commentData = data;
   bigPictureImage.src = commentData.url;
   likesCount.textContent = commentData.likes;
-  comentsCount.textContent = commentData.comments.length;
+  commentsCount.textContent = commentData.comments.length;
   socialCaption.textContent = commentData.description;
 
   commentZone.replaceChildren();
